@@ -7,9 +7,16 @@ export function Guidance({ items, note, stamp = 0 }: { items: Recommendation[]; 
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <span className="label-eyebrow">What to do next</span>
         <span className="text-xs text-muted-foreground">
-          Ranked by points recoverable · each line traced to its sensor
+          Ranked by points recoverable · each line traced to its source
         </span>
       </div>
+
+      <p className="mt-3 max-w-[62ch] text-xs leading-relaxed text-muted-foreground">
+        Distance advice comes first because it is the only precise, workspace-specific measurement
+        (70% of the score). Temperature, humidity and air quality lines are general local
+        environmental context for your area from a weather API — not workspace measurements — and
+        are weighted 10% each. Light is shown for information only and is not scored.
+      </p>
 
 
       {note && (

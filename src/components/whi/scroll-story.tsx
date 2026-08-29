@@ -6,6 +6,7 @@ import {
   defaultReading,
   healthScore,
   metricList,
+  scoredMetricList,
   metrics,
   statusOf,
   statusTone,
@@ -262,9 +263,12 @@ export function ScrollStory({ onChapter }: { onChapter: (r: SensorReading) => vo
                       ))}
                     </div>
                     <p className="mt-4 text-xs text-muted-foreground">
-                      Weighted by impact: {metricList
+                      Weighted by impact: {scoredMetricList
                         .map((m) => `${metrics[m.key].label.toLowerCase()} ${Math.round(m.weight * 100)}%`)
-                        .join(" · ")}
+                        .join(" · ")}. Light is shown but not scored — the sensor only reports
+                      bright or dark. Temperature, humidity and air quality are general local data
+                      for your area from a weather API, not workspace measurements, so they are
+                      weighted lowest.
                     </p>
                   </div>
                 )}
