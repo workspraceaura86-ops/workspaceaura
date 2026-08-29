@@ -7,6 +7,7 @@ import { ControlDeck } from "@/components/whi/control-deck";
 import { LiveReadout } from "@/components/whi/live-readout";
 import { ModeToggle } from "@/components/whi/mode-toggle";
 import { useLiveFeed } from "@/lib/use-live-feed";
+import { useLocalEnvironment } from "@/lib/use-local-environment";
 
 import { Narrative } from "@/components/whi/narrative";
 import { Guidance } from "@/components/whi/guidance";
@@ -91,11 +92,21 @@ function Dashboard() {
 
   /** Hardware feed drives the reading unless simulation mode is switched on. */
   const live = useLiveFeed(!simulation, profile.reading);
+  /** Area-level conditions from Open-Meteo — general context, not the desk. */
+  const localEnv = useLocalEnvironment(!simulation);
+  const env = localEnv.data;
   const liveReading = live.reading;
   useEffect(() => {
-    if (!simulation && liveReading) applyReading(liveReading);
+    if (!simulation && liveReading) {
+      applyReading({
+        ...liveReading,
+        ...(env
+          ? { temperature: env.temperature, humidity: env.humidity, aqi: env.aqi }
+          : {}),
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [simulation, liveReading?.distance, liveReading?.light, liveReading?.temperature, liveReading?.humidity]);
+  }, [simulation, liveReading?.distance, liveReading?.light, env?.temperature, env?.humidity, env?.aqi]);
 
   const onChange = useCallback(
     (key: MetricKey, value: number) => applyReading({ ...reading, [key]: value }),
@@ -193,6 +204,7 @@ function Dashboard() {
               status={live.status}
               error={live.error}
               lastUpdate={live.lastUpdate}
+              env={localEnv}
             />
           )}
           <Narrative reasoning={reasoning} reading={reading} stamp={stamp} />

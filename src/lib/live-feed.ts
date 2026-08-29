@@ -26,8 +26,17 @@ export type NodemcuRow = {
   light_state: string | null;
 };
 
-/** Channels the physical module currently reports. */
-export const liveChannels = { distance: true, light: true, temperature: false, humidity: false };
+/**
+ * Channels the physical module reports at the desk. Temperature, humidity and
+ * air quality come from a local weather API instead (area, not workspace).
+ */
+export const liveChannels = {
+  distance: true,
+  light: true,
+  temperature: false,
+  humidity: false,
+  aqi: false,
+};
 
 /** Approximate lux for the LDR's two-state output. */
 export function luxFromState(state: string | null): number {
@@ -38,9 +47,10 @@ export function readingFromRow(row: NodemcuRow, fallback: SensorReading = defaul
   return {
     distance: typeof row.distance === "number" ? row.distance : fallback.distance,
     light: luxFromState(row.light_state),
-    // Not measured by the current module — held at the profile baseline.
+    // Not measured at the desk — supplied by the local weather API layer.
     temperature: fallback.temperature,
     humidity: fallback.humidity,
+    aqi: fallback.aqi,
   };
 }
 
