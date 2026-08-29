@@ -289,7 +289,7 @@ export type Recommendation = {
   key: MetricKey | "break";
   /** true when this line is context only and does not affect the score. */
   informational?: boolean;
-  icon: "eye" | "sun" | "thermo" | "droplet" | "timer";
+  icon: "eye" | "sun" | "thermo" | "droplet" | "timer" | "wind";
   title: string;
   body: string;
   severity: "critical" | "warning" | "ok";

@@ -27,7 +27,7 @@ type Chapter = {
   mode?: "score";
 };
 
-const ideal: SensorReading = { distance: 64, light: 430, temperature: 22, humidity: 47 };
+const ideal: SensorReading = { distance: 64, light: 430, temperature: 22, humidity: 47, aqi: 22 };
 
 const chapters: Chapter[] = [
   {
@@ -64,7 +64,7 @@ const chapters: Chapter[] = [
     body: "Temperature and humidity change the room's colour and density here — 29 °C and 71 % RH read as heavy, warm air. Concentration drops before you ever feel it.",
     camera: { x: 180, y: 60, w: 1020 },
     focus: null,
-    reading: { distance: 38, light: 55, temperature: 29, humidity: 71 },
+    reading: { distance: 38, light: 55, temperature: 29, humidity: 71, aqi: 34 },
   },
   {
     id: "score",
