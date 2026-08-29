@@ -1,3 +1,6 @@
+# robots.txt — Aura Score dashboard
+# All routes are publicly crawlable. Authenticated routes are behind app auth.
+
 User-agent: Googlebot
 Allow: /
 
@@ -12,3 +15,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Crawl-delay: 1
