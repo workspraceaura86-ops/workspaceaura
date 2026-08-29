@@ -31,8 +31,8 @@ export const profiles: Record<ProfileId, Profile> = {
     tagline: "Long reading blocks, shared rooms, variable light.",
     voice: "Study blocks are shorter than work blocks — protect light and posture first.",
     focusMinutes: 25,
-    priority: { light: 1.35, distance: 1.15, temperature: 1, humidity: 0.85 },
-    reading: { distance: 58, light: 320, temperature: 22, humidity: 44 },
+    priority: { light: 1.35, distance: 1.15, temperature: 1, humidity: 0.85, aqi: 1 },
+    reading: { distance: 58, light: 320, temperature: 22, humidity: 44, aqi: 34 },
   },
   programmer: {
     id: "programmer",
@@ -40,8 +40,8 @@ export const profiles: Record<ProfileId, Profile> = {
     tagline: "Deep multi-hour sessions on dense text.",
     voice: "Dense text at close range is the highest eye-strain load — breaks matter more than comfort.",
     focusMinutes: 45,
-    priority: { distance: 1.45, light: 1.25, humidity: 1.05, temperature: 0.85 },
-    reading: { distance: 64, light: 380, temperature: 21.5, humidity: 45 },
+    priority: { distance: 1.45, light: 1.25, humidity: 1.05, temperature: 0.85, aqi: 1 },
+    reading: { distance: 64, light: 380, temperature: 21.5, humidity: 45, aqi: 34 },
   },
   gamer: {
     id: "gamer",
@@ -49,8 +49,8 @@ export const profiles: Record<ProfileId, Profile> = {
     tagline: "High-refresh screens, dim rooms, warm hardware.",
     voice: "Dim rooms plus bright screens are the classic gaming strain pattern — lift the ambient floor.",
     focusMinutes: 30,
-    priority: { light: 1.4, temperature: 1.25, distance: 1.05, humidity: 0.8 },
-    reading: { distance: 56, light: 220, temperature: 24, humidity: 42 },
+    priority: { light: 1.4, temperature: 1.25, distance: 1.05, humidity: 0.8, aqi: 1 },
+    reading: { distance: 56, light: 220, temperature: 24, humidity: 42, aqi: 34 },
   },
   professional: {
     id: "professional",
@@ -58,8 +58,8 @@ export const profiles: Record<ProfileId, Profile> = {
     tagline: "Meetings, documents, full working days.",
     voice: "Whole-day comfort wins over peak comfort — air quality and thermal drift do the damage.",
     focusMinutes: 50,
-    priority: { temperature: 1.3, humidity: 1.25, distance: 1.1, light: 1 },
-    reading: { distance: 68, light: 460, temperature: 22.5, humidity: 48 },
+    priority: { temperature: 1.3, humidity: 1.25, distance: 1.1, light: 1, aqi: 1 },
+    reading: { distance: 68, light: 460, temperature: 22.5, humidity: 48, aqi: 34 },
   },
 };
 

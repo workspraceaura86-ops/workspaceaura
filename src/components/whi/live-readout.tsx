@@ -1,5 +1,6 @@
 import { liveChannels, luxFromState, type NodemcuRow } from "@/lib/live-feed";
-import { metricList, subScore, zoneOf, type SensorReading } from "@/lib/whi";
+import type { LocalEnvState } from "@/lib/use-local-environment";
+import { metricList, sourceOf, subScore, zoneOf, type SensorReading } from "@/lib/whi";
 
 /** Read-only replacement for the control deck when the hardware feed is driving. */
 export function LiveReadout({
@@ -8,12 +9,14 @@ export function LiveReadout({
   status,
   error,
   lastUpdate,
+  env,
 }: {
   reading: SensorReading;
   row: NodemcuRow | null;
   status: "idle" | "connecting" | "live" | "error";
   error: string | null;
   lastUpdate: number | null;
+  env?: LocalEnvState;
 }) {
   return (
     <div>
@@ -44,7 +47,8 @@ export function LiveReadout({
         {metricList.map((m) => {
           const value = reading[m.key];
           const s = subScore(m.key, value);
-          const measured = liveChannels[m.key];
+          const src = sourceOf[m.key];
+          const measured = liveChannels[m.key] || (src.origin === "local" && env?.status === "ready");
           const tone = !measured
             ? "var(--muted-foreground)"
             : s > 82
@@ -67,7 +71,11 @@ export function LiveReadout({
               <div>
                 <p className="text-sm text-foreground/90">{m.label}</p>
                 <p className="text-xs text-muted-foreground">
-                  {measured ? zoneOf(m.key, value) : "Not measured by this module"}
+                  {measured ? zoneOf(m.key, value) : "Awaiting data"}
+                </p>
+                <p className="mt-1 text-[11px] leading-snug text-muted-foreground/70">
+                  {src.origin === "sensor" ? "Desk sensor" : "Your area (weather API)"} ·{" "}
+                  {src.scored ? `${Math.round(m.weight * 100)}% of score` : "not scored"}
                 </p>
               </div>
 
@@ -107,12 +115,28 @@ export function LiveReadout({
         })}
       </div>
 
-      <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-        Distance comes straight from the HC-SR04. The LDR reports a two-state reading, mapped to{" "}
-        <span className="mono-num">{luxFromState("bright")} lux</span> when bright and{" "}
-        <span className="mono-num">{luxFromState("dark")} lux</span> when dark. Temperature and
-        humidity are not wired on this module yet, so they hold your profile baseline.
-      </p>
+      <div className="mt-6 space-y-3 text-xs leading-relaxed text-muted-foreground">
+        <p>
+          <strong className="text-foreground/80">Distance (70% of the score)</strong> comes straight
+          from the HC-SR04 at your desk — the only precise, workspace-specific reading, which is why
+          it dominates the Aura Score.
+        </p>
+        <p>
+          <strong className="text-foreground/80">Light is informational only.</strong> The LDR
+          reports two states, mapped to <span className="mono-num">{luxFromState("bright")} lux</span>{" "}
+          when bright and <span className="mono-num">{luxFromState("dark")} lux</span> when dark.
+          With no graded value it is not precise enough to score, so it is excluded from the Aura
+          Score.
+        </p>
+        <p>
+          <strong className="text-foreground/80">Temperature, humidity and air quality (10% each)</strong>{" "}
+          are general local conditions for your area, outsourced from the Open-Meteo weather and air
+          quality APIs using your browser location. They are not measurements of your actual
+          workspace, which is why they carry the lowest weight.
+          {env?.status === "error" && env.error ? ` Local data unavailable: ${env.error}` : ""}
+          {env?.status === "locating" ? " Waiting for location permission…" : ""}
+        </p>
+      </div>
     </div>
   );
 }

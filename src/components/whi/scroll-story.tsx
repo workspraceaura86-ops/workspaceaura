@@ -6,6 +6,7 @@ import {
   defaultReading,
   healthScore,
   metricList,
+  scoredMetricList,
   metrics,
   statusOf,
   statusTone,
@@ -27,7 +28,7 @@ type Chapter = {
   mode?: "score";
 };
 
-const ideal: SensorReading = { distance: 64, light: 430, temperature: 22, humidity: 47 };
+const ideal: SensorReading = { distance: 64, light: 430, temperature: 22, humidity: 47, aqi: 22 };
 
 const chapters: Chapter[] = [
   {
@@ -64,7 +65,7 @@ const chapters: Chapter[] = [
     body: "Temperature and humidity change the room's colour and density here — 29 °C and 71 % RH read as heavy, warm air. Concentration drops before you ever feel it.",
     camera: { x: 180, y: 60, w: 1020 },
     focus: null,
-    reading: { distance: 38, light: 55, temperature: 29, humidity: 71 },
+    reading: { distance: 38, light: 55, temperature: 29, humidity: 71, aqi: 34 },
   },
   {
     id: "score",
@@ -262,9 +263,12 @@ export function ScrollStory({ onChapter }: { onChapter: (r: SensorReading) => vo
                       ))}
                     </div>
                     <p className="mt-4 text-xs text-muted-foreground">
-                      Weighted by impact: {metricList
+                      Weighted by impact: {scoredMetricList
                         .map((m) => `${metrics[m.key].label.toLowerCase()} ${Math.round(m.weight * 100)}%`)
-                        .join(" · ")}
+                        .join(" · ")}. Light is shown but not scored — the sensor only reports
+                      bright or dark. Temperature, humidity and air quality are general local data
+                      for your area from a weather API, not workspace measurements, so they are
+                      weighted lowest.
                     </p>
                   </div>
                 )}
