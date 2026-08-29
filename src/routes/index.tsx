@@ -167,8 +167,19 @@ function Dashboard() {
       </section>
 
       <section className="mx-auto mt-24 max-w-[1240px] px-6 md:px-10">
-        <div className="hairline-t grid gap-16 pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-24">
-          <ControlDeck reading={reading} onChange={onChange} onPreset={applyReading} />
+        <ModeToggle simulation={simulation} onChange={setSimulation} liveStatus={live.status} />
+        <div className="grid gap-16 pt-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-24">
+          {simulation ? (
+            <ControlDeck reading={reading} onChange={onChange} onPreset={applyReading} />
+          ) : (
+            <LiveReadout
+              reading={reading}
+              row={live.row}
+              status={live.status}
+              error={live.error}
+              lastUpdate={live.lastUpdate}
+            />
+          )}
           <Narrative reasoning={reasoning} reading={reading} stamp={stamp} />
         </div>
       </section>
@@ -176,8 +187,12 @@ function Dashboard() {
       <section className="mx-auto mt-24 max-w-[1240px] px-6 md:px-10">
         <div className="hairline-t grid gap-16 pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] lg:gap-24">
           <Guidance items={recs} note={profile.voice} stamp={stamp} />
-          <HardwareStatus reading={reading} mode="simulation" />
+          <HardwareStatus
+            reading={reading}
+            mode={!simulation && live.status === "live" ? "live" : "simulation"}
+          />
         </div>
+
 
       </section>
 
