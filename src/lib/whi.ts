@@ -360,21 +360,16 @@ export function recommend(r: SensorReading, sustainedCloseMs = 0): Recommendatio
     id: "light",
     key: "light",
     icon: "sun",
+    informational: true,
     title:
-      r.light < 300
-        ? "Increase ambient lighting"
-        : r.light > 600
-          ? "Reduce glare and harsh light"
-          : "Lighting is well balanced",
+      r.light < 300 ? "Room reads as dark" : "Room reads as bright",
     body:
       r.light < 300
-        ? `Only ${Math.round(r.light)} lux detected. A dark room next to a bright screen forces high pupil contrast — add a desk lamp to reach ~400 lux.`
-        : r.light > 600
-          ? `${Math.round(r.light)} lux is causing screen glare. Diffuse direct light or angle the monitor away from windows.`
-          : "Ambient light matches your screen brightness, minimising eye fatigue.",
-    severity: sev(ls),
-    impact: Math.round((100 - ls) * metrics.light.weight),
-    sensor: "LDR · ambient light",
+        ? "The LDR reports dark. A dark room next to a bright screen raises pupil contrast — a desk lamp helps. This channel is two-state only, so it is shown for information and does not affect your Aura Score."
+        : "The LDR reports bright. Watch for direct glare on the panel. This channel is two-state only, so it is shown for information and does not affect your Aura Score.",
+    severity: "ok",
+    impact: 0,
+    sensor: "LDR · ambient light (not scored)",
   });
 
   const ts = subScore("temperature", r.temperature);
@@ -384,19 +379,19 @@ export function recommend(r: SensorReading, sustainedCloseMs = 0): Recommendatio
     icon: "thermo",
     title:
       r.temperature < 20.5
-        ? "Your desk is running cold"
+        ? "Your area is running cold today"
         : r.temperature > 24.5
-          ? "Your desk is running warm"
-          : "Thermal comfort is optimal",
+          ? "Your area is running warm today"
+          : "Local temperature is in a comfortable range",
     body:
       r.temperature < 20.5
-        ? `${r.temperature.toFixed(1)}°C stiffens hands and wrists and slows fine motor accuracy. Target 21–24°C.`
+        ? `Local outdoor temperature is ${r.temperature.toFixed(1)}°C. General context for your area — not a desk measurement. Cold air tends to stiffen hands; layer up or warm the room toward 21–24°C if it matches indoors.`
         : r.temperature > 24.5
-          ? `${r.temperature.toFixed(1)}°C measurably reduces sustained concentration. Ventilate or lower to 21–24°C.`
-          : "Temperature supports sustained focus without drowsiness.",
+          ? `Local outdoor temperature is ${r.temperature.toFixed(1)}°C. General context for your area — not a desk measurement. Warm days usually mean warmer rooms; ventilate if your space feels above 24°C.`
+          : `Local outdoor temperature is ${r.temperature.toFixed(1)}°C — general context for your area, not a desk measurement. Nothing to act on.`,
     severity: sev(ts),
     impact: Math.round((100 - ts) * metrics.temperature.weight),
-    sensor: "DHT11 · temperature",
+    sensor: "Open-Meteo · local temperature (10% weight)",
   });
 
   const hs = subScore("humidity", r.humidity);
@@ -406,19 +401,41 @@ export function recommend(r: SensorReading, sustainedCloseMs = 0): Recommendatio
     icon: "droplet",
     title:
       r.humidity < 40
-        ? "Air is too dry for long sessions"
+        ? "Local air is dry today"
         : r.humidity > 55
-          ? "Humidity is above comfort range"
-          : "Humidity is comfortable",
+          ? "Local humidity is high today"
+          : "Local humidity is comfortable",
     body:
       r.humidity < 40
-        ? `${Math.round(r.humidity)}% RH accelerates tear-film evaporation — a direct cause of dry, gritty eyes. Aim for 40–55%.`
+        ? `${Math.round(r.humidity)}% RH in your area — general environmental context, not a desk reading. Dry air speeds tear-film evaporation, so blink deliberately and keep water nearby.`
         : r.humidity > 55
-          ? `${Math.round(r.humidity)}% RH makes the room feel heavier and warmer than it is. Improve airflow.`
-          : "Air moisture is in the range that keeps eyes and airways comfortable.",
+          ? `${Math.round(r.humidity)}% RH in your area — general environmental context, not a desk reading. Rooms feel heavier on days like this; airflow helps.`
+          : `${Math.round(r.humidity)}% RH in your area — general environmental context, not a desk reading. Comfortable range.`,
     severity: sev(hs),
     impact: Math.round((100 - hs) * metrics.humidity.weight),
-    sensor: "DHT11 · humidity",
+    sensor: "Open-Meteo · local humidity (10% weight)",
+  });
+
+  const as = subScore("aqi", r.aqi);
+  out.push({
+    id: "aqi",
+    key: "aqi",
+    icon: "wind",
+    title:
+      r.aqi <= 50
+        ? "Local air quality is good"
+        : r.aqi <= 100
+          ? "Local air quality is moderate"
+          : "Local air quality is poor today",
+    body:
+      r.aqi <= 50
+        ? `US AQI ${Math.round(r.aqi)} for your area — outdoor data from a weather service, not a measurement of your room.`
+        : r.aqi <= 100
+          ? `US AQI ${Math.round(r.aqi)} for your area — outdoor data, not a room measurement. Sensitive people may prefer filtered air today.`
+          : `US AQI ${Math.round(r.aqi)} for your area — outdoor data, not a room measurement. Consider keeping windows closed and running a purifier.`,
+    severity: sev(as),
+    impact: Math.round((100 - as) * metrics.aqi.weight),
+    sensor: "Open-Meteo · local air quality (10% weight)",
   });
 
   return out.sort((a, b) => b.impact - a.impact);
@@ -428,19 +445,20 @@ export function actionPlan(r: SensorReading): string[] {
   const plan: string[] = [];
   if (r.distance < 55) plan.push("Consider adjusting your seating position back to a 55–75 cm viewing distance");
   if (r.distance > 78) plan.push("Consider moving slightly closer — recommended viewing distance is 55–75 cm");
-  if (r.light < 300) plan.push("Turn on a desk lamp to lift ambient light above 300 lux");
-  if (r.light > 600) plan.push("Cut direct glare — angle the monitor or draw the blinds");
-  if (r.temperature < 20.5) plan.push("Warm the room toward 22°C");
-  if (r.temperature > 24.5) plan.push("Ventilate to bring the room back under 24°C");
-  if (r.humidity < 40) plan.push("Add moisture to the air and blink deliberately");
-  if (r.humidity > 55) plan.push("Increase airflow to shed excess humidity");
   plan.push("Follow the 20-20-20 rule: every 20 min, look 20 ft away for 20 s");
+  if (r.light < 300) plan.push("Room reads dark — a desk lamp reduces screen-to-room contrast (not scored)");
+  if (r.temperature < 20.5) plan.push("Local conditions are cold today — warm your room toward 22°C if it matches indoors");
+  if (r.temperature > 24.5) plan.push("Local conditions are warm today — ventilate if your room follows");
+  if (r.humidity < 40) plan.push("Local air is dry today — blink deliberately and stay hydrated");
+  if (r.humidity > 55) plan.push("Local humidity is high today — increase airflow");
+  if (r.aqi > 100) plan.push("Local air quality is poor today — keep windows closed and filter indoor air");
   return plan;
 }
 
 export const presets: { id: string; label: string; reading: SensorReading }[] = [
-  { id: "optimal", label: "Ideal desk", reading: { distance: 65, light: 450, temperature: 22, humidity: 47 } },
-  { id: "night", label: "Late-night coding", reading: { distance: 38, light: 60, temperature: 19, humidity: 32 } },
-  { id: "gamer", label: "Gaming rig", reading: { distance: 44, light: 140, temperature: 27, humidity: 38 } },
-  { id: "glare", label: "Sunlit café", reading: { distance: 50, light: 900, temperature: 26, humidity: 62 } },
+  { id: "optimal", label: "Ideal desk", reading: { distance: 65, light: 450, temperature: 22, humidity: 47, aqi: 25 } },
+  { id: "night", label: "Late-night coding", reading: { distance: 38, light: 60, temperature: 19, humidity: 32, aqi: 60 } },
+  { id: "gamer", label: "Gaming rig", reading: { distance: 44, light: 140, temperature: 27, humidity: 38, aqi: 80 } },
+  { id: "glare", label: "Sunlit café", reading: { distance: 50, light: 900, temperature: 26, humidity: 62, aqi: 120 } },
 ];
+
