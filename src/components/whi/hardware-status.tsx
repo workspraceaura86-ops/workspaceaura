@@ -24,6 +24,13 @@ export function HardwareStatus({
         </span>
       </div>
 
+      <p className="mt-3 max-w-[62ch] text-xs leading-relaxed text-muted-foreground">
+        Only distance and light are measured at your desk. Temperature, humidity and air quality are
+        general local readings for your area from the Open-Meteo APIs — not workspace measurements —
+        so they are weighted 10% each, while distance carries 70%. Light is displayed for context
+        and is excluded from the score.
+      </p>
+
       <ul className="mt-5 divide-y divide-border">
         {metricList.map((m) => {
           const s = subScore(m.key, reading[m.key]);

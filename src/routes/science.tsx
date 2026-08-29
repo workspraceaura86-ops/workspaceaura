@@ -120,7 +120,7 @@ const steps: Step[] = [
     id: "score",
     eyebrow: "06 · One score, one explanation",
     title: "The four signals become a single number — and a sentence.",
-    body: "Each reading is scored against its healthy band, weighted by how much it affects you, and combined into 0–100. Every movement in that number is traced back to the channel that caused it, in plain words.",
+    body: "Distance carries 70% of the Aura Score — it is the only precise, workspace-specific sensor reading. Temperature, humidity and air quality are general local conditions for your area from a weather API, not workspace measurements, so they are weighted 10% each. Light is shown but not scored: the sensor reports only bright or dark.",
     camera: { x: 0, y: 0, w: 1200 },
     focus: null,
     reading: { distance: 64, light: 430, temperature: 22, humidity: 46, aqi: 34 },
@@ -291,8 +291,8 @@ function SciencePage() {
           <ol className="mt-8 divide-y divide-border">
             {[
               ["Workspace conditions", "The room as it actually is, moment to moment."],
-              ["Sensors collect", "Distance, light, temperature, humidity — numbers only."],
-              ["Data analysis", "Each reading scored against its healthy band and weighted."],
+              ["Sensors collect", "Distance and light from the desk module; temperature, humidity and air quality from a local weather API for your area."],
+              ["Data analysis", "Distance 70%, temperature 10%, humidity 10%, air quality 10%. Light is informational only."],
               ["Workspace Health Score", "One 0–100 figure you can watch move in real time."],
               ["Actionable recommendations", "Ranked by the points you would actually recover."],
             ].map(([title, body], n) => (
