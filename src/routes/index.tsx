@@ -153,7 +153,7 @@ function Dashboard() {
       </section>
 
       {/* THE STORY — one continuous camera move through the desk */}
-      <ScrollStory onChapter={applyReading} />
+      <ScrollStory onChapter={(r) => simulation && applyReading(r)} />
 
       {/* HANDOVER — the room becomes yours to drive */}
       <section className="mx-auto max-w-[1240px] px-6 pt-24 md:px-10 md:pt-32">
