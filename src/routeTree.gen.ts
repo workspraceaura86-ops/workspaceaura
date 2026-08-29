@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReplayRouteImport } from './routes/replay'
+import { Route as ScienceRouteImport } from './routes/science'
+import { Route as SetupRouteImport } from './routes/setup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReplayRoute = ReplayRouteImport.update({
+  id: '/replay',
+  path: '/replay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScienceRoute = ScienceRouteImport.update({
+  id: '/science',
+  path: '/science',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/replay': typeof ReplayRoute
+  '/science': typeof ScienceRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/replay': typeof ReplayRoute
+  '/science': typeof ScienceRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/replay': typeof ReplayRoute
+  '/science': typeof ScienceRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/replay' | '/science' | '/setup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/replay' | '/science' | '/setup'
+  id: '__root__' | '/' | '/replay' | '/science' | '/setup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ReplayRoute: typeof ReplayRoute
+  ScienceRoute: typeof ScienceRoute
+  SetupRoute: typeof SetupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +78,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/replay': {
+      id: '/replay'
+      path: '/replay'
+      fullPath: '/replay'
+      preLoaderRoute: typeof ReplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/science': {
+      id: '/science'
+      path: '/science'
+      fullPath: '/science'
+      preLoaderRoute: typeof ScienceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ReplayRoute: ReplayRoute,
+  ScienceRoute: ScienceRoute,
+  SetupRoute: SetupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
