@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceScene } from "@/components/whi/workspace-scene";
 import { ScrollStory } from "@/components/whi/scroll-story";
 import { ControlDeck } from "@/components/whi/control-deck";
+import { LiveReadout } from "@/components/whi/live-readout";
+import { ModeToggle } from "@/components/whi/mode-toggle";
+import { useLiveFeed } from "@/lib/use-live-feed";
+
 import { Narrative } from "@/components/whi/narrative";
 import { Guidance } from "@/components/whi/guidance";
 import { BreakTimer } from "@/components/whi/break-timer";
