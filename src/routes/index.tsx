@@ -87,10 +87,19 @@ function Dashboard() {
     }, 520);
   }, []);
 
+  /** Hardware feed drives the reading unless simulation mode is switched on. */
+  const live = useLiveFeed(!simulation, profile.reading);
+  const liveReading = live.reading;
+  useEffect(() => {
+    if (!simulation && liveReading) applyReading(liveReading);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [simulation, liveReading?.distance, liveReading?.light, liveReading?.temperature, liveReading?.humidity]);
+
   const onChange = useCallback(
     (key: MetricKey, value: number) => applyReading({ ...reading, [key]: value }),
     [reading, applyReading],
   );
+
 
   useEffect(() => {
     const id = setInterval(() => {
