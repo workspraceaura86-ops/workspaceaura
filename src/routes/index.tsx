@@ -54,7 +54,9 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const { profile, setup } = useWorkspaceConfig();
+  const [simulation, setSimulation] = useState(false);
   const [reading, setReading] = useState<SensorReading>(defaultReading);
+
   const prevRef = useRef<SensorReading>(defaultReading);
   const [reasoning, setReasoning] = useState<Reasoning>(() => explain(defaultReading, defaultReading));
   const [stamp, setStamp] = useState(0);
