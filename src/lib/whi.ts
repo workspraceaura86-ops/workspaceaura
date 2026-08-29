@@ -18,6 +18,8 @@ export type SensorReading = {
   temperature: number;
   /** Relative humidity in % */
   humidity: number;
+  /** US Air Quality Index for the user's local area */
+  aqi: number;
 };
 
 export type SensorSource = {
@@ -30,6 +32,7 @@ export const defaultReading: SensorReading = {
   light: 380,
   temperature: 22.5,
   humidity: 45,
+  aqi: 38,
 };
 
 export type MetricKey = keyof SensorReading;
@@ -55,7 +58,7 @@ export const metrics: Record<MetricKey, MetricMeta> = {
     min: 20,
     max: 100,
     step: 1,
-    weight: 0.34,
+    weight: 0.7,
     ideal: [55, 75],
     zones: [
       { upTo: 40, label: "Too close" },
@@ -72,7 +75,7 @@ export const metrics: Record<MetricKey, MetricMeta> = {
     min: 0,
     max: 1000,
     step: 5,
-    weight: 0.28,
+    weight: 0,
     ideal: [300, 600],
     zones: [
       { upTo: 80, label: "Dark" },
@@ -89,7 +92,7 @@ export const metrics: Record<MetricKey, MetricMeta> = {
     min: 12,
     max: 34,
     step: 0.5,
-    weight: 0.2,
+    weight: 0.1,
     ideal: [20.5, 24.5],
     zones: [
       { upTo: 17, label: "Cold" },
@@ -106,7 +109,7 @@ export const metrics: Record<MetricKey, MetricMeta> = {
     min: 10,
     max: 90,
     step: 1,
-    weight: 0.18,
+    weight: 0.1,
     ideal: [40, 55],
     zones: [
       { upTo: 25, label: "Very dry" },
@@ -116,6 +119,61 @@ export const metrics: Record<MetricKey, MetricMeta> = {
       { upTo: Infinity, label: "High humidity" },
     ],
   },
+  aqi: {
+    key: "aqi",
+    label: "Air Quality",
+    unit: "AQI",
+    min: 0,
+    max: 200,
+    step: 1,
+    weight: 0.1,
+    ideal: [0, 50],
+    zones: [
+      { upTo: 50, label: "Good" },
+      { upTo: 100, label: "Moderate" },
+      { upTo: 150, label: "Unhealthy for sensitive groups" },
+      { upTo: 200, label: "Unhealthy" },
+      { upTo: Infinity, label: "Very unhealthy" },
+    ],
+  },
+};
+
+/**
+ * Where each channel's number actually comes from.
+ *
+ * Distance is the only precise, workspace-specific measurement, so it carries
+ * 70% of the Aura Score. Temperature, humidity and air quality are *general
+ * local conditions* for the user's area, pulled from a free weather API — not
+ * measurements of the desk itself — so each is weighted only 10%. The light
+ * sensor reports two states (bright / dark) with no graded value, so it is
+ * shown for information but excluded from the score entirely.
+ */
+export const sourceOf: Record<MetricKey, { origin: "sensor" | "local"; text: string; scored: boolean }> = {
+  distance: {
+    origin: "sensor",
+    text: "Measured at your desk by the NodeMCU ultrasonic sensor — the primary factor (70%).",
+    scored: true,
+  },
+  light: {
+    origin: "sensor",
+    text: "Bright / dark only from the LDR — informational, not scored (no graded value to score).",
+    scored: false,
+  },
+  temperature: {
+    origin: "local",
+    text: "General outdoor conditions for your area (Open-Meteo), not your workspace — weighted 10%.",
+    scored: true,
+  },
+  humidity: {
+    origin: "local",
+    text: "General outdoor conditions for your area (Open-Meteo), not your workspace — weighted 10%.",
+    scored: true,
+  },
+  aqi: {
+    origin: "local",
+    text: "Local US AQI for your area (Open-Meteo air quality), not your workspace — weighted 10%.",
+    scored: true,
+  },
 };
 
 export const metricList = [
@@ -123,7 +181,11 @@ export const metricList = [
   metrics.light,
   metrics.temperature,
   metrics.humidity,
+  metrics.aqi,
 ];
+
+/** Channels that actually contribute to the Aura Score (light is excluded). */
+export const scoredMetricList = metricList.filter((m) => m.weight > 0);
 
 export function zoneOf(key: MetricKey, value: number): string {
   return metrics[key].zones.find((z) => value <= z.upTo)!.label;
@@ -163,7 +225,7 @@ export function statusTone(status: Status) {
 }
 
 export function healthScore(r: SensorReading): number {
-  const total = metricList.reduce((acc, m) => acc + subScore(m.key, r[m.key]) * m.weight, 0);
+  const total = scoredMetricList.reduce((acc, m) => acc + subScore(m.key, r[m.key]) * m.weight, 0);
   return Math.round(total);
 }
 
@@ -187,6 +249,7 @@ const verb: Record<MetricKey, string> = {
   light: "Ambient lighting",
   temperature: "Temperature",
   humidity: "Humidity",
+  aqi: "Local air quality",
 };
 
 function fmt(key: MetricKey, v: number) {
@@ -196,7 +259,7 @@ function fmt(key: MetricKey, v: number) {
 
 export function explain(prev: SensorReading, next: SensorReading): Reasoning {
   const delta = healthScore(next) - healthScore(prev);
-  const lines: ReasonLine[] = metricList
+  const lines: ReasonLine[] = scoredMetricList
     .map((m) => {
       const d = (subScore(m.key, next[m.key]) - subScore(m.key, prev[m.key])) * m.weight;
       return {
@@ -224,6 +287,8 @@ export function explain(prev: SensorReading, next: SensorReading): Reasoning {
 export type Recommendation = {
   id: string;
   key: MetricKey | "break";
+  /** true when this line is context only and does not affect the score. */
+  informational?: boolean;
   icon: "eye" | "sun" | "thermo" | "droplet" | "timer";
   title: string;
   body: string;
@@ -237,8 +302,9 @@ export type Recommendation = {
 export const sensorOf: Record<MetricKey, { part: string; name: string }> = {
   distance: { part: "HC-SR04", name: "Ultrasonic distance" },
   light: { part: "LDR", name: "Ambient light" },
-  temperature: { part: "DHT11", name: "Temperature" },
-  humidity: { part: "DHT11", name: "Humidity" },
+  temperature: { part: "Open-Meteo", name: "Local temperature (area, not desk)" },
+  humidity: { part: "Open-Meteo", name: "Local humidity (area, not desk)" },
+  aqi: { part: "Open-Meteo", name: "Local air quality (area, not desk)" },
 };
 
 /**
